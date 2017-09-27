@@ -1,6 +1,6 @@
 {
   "name": "dev-ringer",
-  "version": "1.2.4",
+  "version": "1.2.5",
   "description": "",
   "main": "index.js",
   "bin": {
