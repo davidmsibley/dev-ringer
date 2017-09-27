@@ -55,28 +55,14 @@ class DevRingerServer {
         }
         let rules = [];
         let prxRules = [];
-        value.proxyPaths.forEach(({path, rewrites = [], origin}) => {
-          if (!isAllPaths({path})) {
-            let originUrl = new URL(origin);
-            let offshoot = new ProxyEndpoint({
-              target: new Locator({
-                protocol: originUrl.protocol.slice(0, -1),
-                host: originUrl.hostname,
-                port: originUrl.port
-              })
-            });
-            rules.push(new Rule({
-              path: path,
-              handler: function(req, res) {
-                req.url = req.originalUrl;
-                offshoot.proxy.web(req, res);
-                return false;
-              },
-            }));
-          }
-        });
         value.contentRewrites.forEach(({search, replace}) => {
           if (search && replace) {
+            rules.push(new Rule({
+              handler: rewriteBody(
+                new URL(search).origin,
+                new URL(replace).origin
+              ),
+            }));
             rules.push(new Rule({
               handler: rewriteBody(
                 new URL(search).host,
@@ -90,9 +76,36 @@ class DevRingerServer {
             prxRules.push(new Rule({
               handler: rewriteHeader(
                 LOCATION,
+                new URL(search).origin,
+                new URL(replace).origin
+              ),
+            }));
+            prxRules.push(new Rule({
+              handler: rewriteHeader(
+                LOCATION,
                 new URL(search).host,
                 new URL(replace).host
               ),
+            }));
+          }
+        });
+        value.proxyPaths.forEach(({path, rewrites = [], origin}) => {
+          if (!isAllPaths({path})) {
+            let originUrl = new URL(origin);
+            let offshoot = new ProxyEndpoint({
+              target: new Locator({
+                protocol: originUrl.protocol.slice(0, -1),
+                host: originUrl.hostname,
+                port: originUrl.port
+              })
+            }, rules.slice(), prxRules.slice());
+            rules.push(new Rule({
+              path: path,
+              handler: function(req, res) {
+                req.url = req.originalUrl;
+                offshoot.proxy.web(req, res);
+                return false;
+              },
             }));
           }
         });
