@@ -3,12 +3,13 @@ const Promise = require('promise');
 const { URL } = require('url');
 const zlib = require('zlib');
 
-const { HTTP, HTTPS, LOCATION, createServer, addressify } = require('./lib/common');
 const DevRingerConfig = require('./lib/DevRingerConfiguration');
 const Locator = require('./lib/Locator');
 const ProxyEndpoint = require('./lib/ProxyEndpoint');
 const { rewriteBody, rewriteHeader } = require('./lib/rewrites');
 const Rule = require('./lib/Rule');
+
+const LOCATION = 'location';
 
 class DevRingerServer {
   constructor(config, cla) {
