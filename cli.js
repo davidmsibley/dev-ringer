@@ -50,6 +50,11 @@ let config = {
     startPort: options.startPort,
     startSecurePort: options.startSecurePort
   }
-}
+};
 
 let server = new DevRingerServer(undefined, config);
+
+server.drpConf.then((conf) => {
+  console.log(JSON.stringify(conf, null, 2));
+  console.log('Server listening at ' + conf.entryPoint + ' Press ^C to quit.');
+});
