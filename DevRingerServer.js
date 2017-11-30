@@ -4,7 +4,7 @@ const { URL } = require('url');
 const DevRingerConfig = require('./lib/DevRingerConfiguration');
 const Locator = require('./lib/Locator');
 const ProxyEndpoint = require('./lib/ProxyEndpoint');
-const { rewriteBody, rewriteHeader } = require('./lib/rewrites');
+const { rewriteBody, rewriteHeader, rewritePostdata } = require('./lib/rewrites');
 const Rule = require('./lib/Rule');
 
 const LOCATION = 'location';
@@ -54,38 +54,44 @@ class DevRingerServer {
             port: targetUrl.port
           });
         }
-        let rules = [];
-        let prxRules = [];
+        let middlewareRules = [];
+        let proxyReqRules = [];
+        let proxyResRules = [];
         value.contentRewrites.forEach(({search, replace}) => {
           if (search && replace) {
-            rules.push(new Rule({
+            middlewareRules.push(new Rule({
               handler: rewriteBody(
                 new URL(search).origin,
                 new URL(replace).origin
               )
             }));
-            rules.push(new Rule({
+            middlewareRules.push(new Rule({
               handler: rewriteBody(
                 new URL(search).host,
                 new URL(replace).host
+              )
+            }));
+            middlewareRules.push(new Rule({
+              handler: rewritePostdata(
+                new URL(replace).origin,
+                new URL(search).origin
               )
             }));
           }
         });
         value.locationRewrites.forEach(({search, replace}) => {
           if (search && replace) {
-            prxRules.push(new Rule({
+            proxyResRules.push(new Rule({
               handler: rewriteHeader(
                 LOCATION,
                 new URL(search).origin,
                 new URL(replace).origin
               )
             }));
-            prxRules.push(new Rule({
-              handler: rewriteHeader(
-                LOCATION,
-                new URL(search).host,
-                new URL(replace).host
+            middlewareRules.push(new Rule({
+              handler: rewritePostdata(
+                new URL(replace).origin,
+                new URL(search).origin
               )
             }));
           }
@@ -99,8 +105,8 @@ class DevRingerServer {
                 host: originUrl.hostname,
                 port: originUrl.port
               })
-            }, rules.slice(), prxRules.slice());
-            rules.push(new Rule({
+            }, middlewareRules.slice(), proxyReqRules.slice(), proxyResRules.slice());
+            middlewareRules.push(new Rule({
               path: path,
               handler: function (req, res) {
                 req.url = req.originalUrl;
@@ -110,7 +116,7 @@ class DevRingerServer {
             }));
           }
         });
-        this.proxies.push(new ProxyEndpoint({source, target}, rules, prxRules));
+        this.proxies.push(new ProxyEndpoint({source, target}, middlewareRules, proxyReqRules, proxyResRules));
       });
       return conf;
     }).catch((err) => {

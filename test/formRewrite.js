@@ -46,8 +46,8 @@ describe('Form Rewrite', function () {
   });
 
   it('should rewrite form data', function (done) {
-    let sourceForm = 'organization=https%3A%2F%2Flocalhost:8445%2Fidp%2Fshibboleth&entityID=https%3A%2F%2Fmy-test.wisconsin.edu%2Fshibboleth&return=https%3A%2F%2Flocalhost:8444%2FShibboleth.sso%2FDS%3FSAMLDS%3D1%26target%3Dcookie%253A1511884945_564e&rm=select&auto-redirect-preference=on';
-    let expected = 'organization=https%3A%2F%2Flocalhost:9445%2Fidp%2Fshibboleth&entityID=https%3A%2F%2Fmy-test.wisconsin.edu%2Fshibboleth&return=https%3A%2F%2Flocalhost:9444%2FShibboleth.sso%2FDS%3FSAMLDS%3D1%26target%3Dcookie%253A1511884945_564e&rm=select&auto-redirect-preference=on';
+    let sourceForm = 'organization=https%3A%2F%2Flocalhost%3A8445%2Fidp%2Fshibboleth&entityID=https%3A%2F%2Fmy-test.wisconsin.edu%2Fshibboleth&return=https%3A%2F%2Flocalhost%3A8444%2FShibboleth.sso%2FDS%3FSAMLDS%3D1%26target%3Dcookie%253A1511884945_564e&rm=select&auto-redirect-preference=on';
+    let expected = 'organization=https%3A%2F%2Flocalhost%3A9445%2Fidp%2Fshibboleth&entityID=https%3A%2F%2Fmy-test.wisconsin.edu%2Fshibboleth&return=https%3A%2F%2Flocalhost%3A9444%2FShibboleth.sso%2FDS%3FSAMLDS%3D1%26target%3Dcookie%253A1511884945_564e&rm=select&auto-redirect-preference=on';
     req('https://localhost:8444')
       .post('/')
       .set('Content-Type', 'application/x-www-form-urlencoded')
