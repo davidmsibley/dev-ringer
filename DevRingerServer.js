@@ -12,6 +12,7 @@ const LOCATION = 'location';
 class DevRingerServer {
   constructor (config, cla) {
     this.drpConf = null;
+    this.proxies = [];
 
     if (config) {
       this.drpConf = Promise.resolve(config);
@@ -32,7 +33,7 @@ class DevRingerServer {
       throw new Error('No configuration found!');
     }
     this.drpConf.then((conf) => {
-      let proxies = [];
+      this.proxies = [];
       Object.entries(conf.servers).forEach(([key, value]) => {
         let sourceUrl = new URL(key);
         let source = new Locator({
@@ -109,10 +110,7 @@ class DevRingerServer {
             }));
           }
         });
-        proxies.push(new ProxyEndpoint({source, target}, rules, prxRules));
-      });
-      proxies.forEach((proxy) => {
-        proxy.listen();
+        this.proxies.push(new ProxyEndpoint({source, target}, rules, prxRules));
       });
       return conf;
     }).catch((err) => {
@@ -120,6 +118,16 @@ class DevRingerServer {
     });
 
     return this;
+  }
+  start () {
+    this.proxies.forEach((proxy) => {
+      proxy.listen();
+    });
+  }
+  stop () {
+    this.proxies.forEach((proxy) => {
+      proxy.close();
+    });
   }
 }
 

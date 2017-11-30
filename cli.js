@@ -56,5 +56,6 @@ let server = new DevRingerServer(undefined, config);
 
 server.drpConf.then((conf) => {
   console.log(JSON.stringify(conf, null, 2));
+  server.start();
   console.log('Server listening at ' + conf.entryPoint + ' Press ^C to quit.');
 });
