@@ -1,8 +1,8 @@
-const http = require('http');
+const { createServer } = require('../../lib/common');
 
 class EchoServer {
-  constructor (port) {
-    this.server = http.createServer((request, response) => {
+  constructor (protocol, port) {
+    this.server = createServer(protocol, (request, response) => {
       let body = [];
       request.on('data', (chunk) => {
         body.push(chunk);

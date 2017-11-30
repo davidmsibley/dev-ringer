@@ -120,13 +120,17 @@ class DevRingerServer {
     return this;
   }
   start () {
-    this.proxies.forEach((proxy) => {
-      proxy.listen();
+    this.drpConf.then(() => {
+      this.proxies.forEach((proxy) => {
+        proxy.listen();
+      });
     });
   }
   stop () {
-    this.proxies.forEach((proxy) => {
-      proxy.close();
+    this.drpConf.then(() => {
+      this.proxies.forEach((proxy) => {
+        proxy.close();
+      });
     });
   }
 }
