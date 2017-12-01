@@ -1,0 +1,117 @@
+{
+  "entryPoint": "http://localhost:8081/",
+  "servers": {
+    "http://localhost:8081": {
+      "proxyPaths": [
+        {
+          "path": "*",
+          "origin": "http://localhost:9080"
+        }
+      ],
+      "locationRewrites": [
+        {
+          "search": "https://localhost:8081",
+          "replace": "https://localhost:8444"
+        },
+        {
+          "search": "https://localhost:9444",
+          "replace": "https://localhost:8444"
+        }
+      ],
+      "contentRewrites": [
+        {
+          "search": "http://localhost:9080",
+          "replace": "http://localhost:8081"
+        },
+        {
+          "search": "https://localhost:9444",
+          "replace": "https://localhost:8444"
+        },
+        {
+          "search": "https://localhost:9446",
+          "replace": "https://localhost:8446"
+        }
+      ]
+    },
+    "https://localhost:8444": {
+      "proxyPaths": [
+        {
+          "path": "*",
+          "origin": "https://localhost:9444"
+        }
+      ],
+      "locationRewrites": [
+        {
+          "search": "https://localhost:9444",
+          "replace": "https://localhost:8444"
+        },
+        {
+          "search": "https://localhost:9445",
+          "replace": "https://localhost:8445"
+        },
+        {
+          "search": "https://localhost:9446",
+          "replace": "https://localhost:8446"
+        }
+      ],
+      "contentRewrites": [
+        {
+          "search": "https://localhost:9444",
+          "replace": "https://localhost:8444"
+        }
+      ]
+    },
+    "https://localhost:8446": {
+      "proxyPaths": [
+        {
+          "path": "*",
+          "origin": "https://localhost:9446"
+        }
+      ],
+      "locationRewrites": [
+        {
+          "search": "https://localhost:9444",
+          "replace": "https://localhost:8444"
+        }
+      ],
+      "contentRewrites": [
+        {
+          "search": "https://localhost:9446",
+          "replace": "https://localhost:8446"
+        },
+        {
+          "search": "https://localhost:9444",
+          "replace": "https://localhost:8444"
+        },
+        {
+          "search": "https://localhost:9445",
+          "replace": "https://localhost:8445"
+        }
+      ]
+    },
+    "https://localhost:8445": {
+      "proxyPaths": [
+        {
+          "path": "*",
+          "origin": "https://localhost:9445"
+        }
+      ],
+      "locationRewrites": [
+        {
+          "search": "https://localhost:9445",
+          "replace": "https://localhost:8445"
+        }
+      ],
+      "contentRewrites": [
+        {
+          "search": "https://localhost:9444",
+          "replace": "https://localhost:8444"
+        },
+        {
+          "search": "https://localhost:9445",
+          "replace": "https://localhost:8445"
+        }
+      ]
+    }
+  }
+}

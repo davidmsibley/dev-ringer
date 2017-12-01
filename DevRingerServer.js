@@ -1,41 +1,39 @@
-const connect = require('connect');
 const Promise = require('promise');
 const { URL } = require('url');
-const zlib = require('zlib');
 
 const DevRingerConfig = require('./lib/DevRingerConfiguration');
 const Locator = require('./lib/Locator');
 const ProxyEndpoint = require('./lib/ProxyEndpoint');
-const { rewriteBody, rewriteHeader } = require('./lib/rewrites');
+const { rewriteBody, rewriteHeader, rewritePostdata } = require('./lib/rewrites');
 const Rule = require('./lib/Rule');
 
 const LOCATION = 'location';
 
 class DevRingerServer {
-  constructor(config, cla) {
-    let drpConf = null;
+  constructor (config, cla) {
+    this.drpConf = null;
+    this.proxies = [];
 
     if (config) {
-      drpConf = Promise.resolve(config);
+      this.drpConf = Promise.resolve(config);
     } else if (cla) {
       if (cla.harFile) {
-        drpConf = DevRingerConfig.fromHAR(cla.harFile, cla.harOptions);
+        this.drpConf = DevRingerConfig.fromHAR(cla.harFile, cla.harOptions);
         if (cla.outputFile) {
-          drpConf.then((conf) => {
+          this.drpConf.then((conf) => {
             DevRingerConfig.toDRP(cla.outputFile, JSON.stringify(conf, null, 2));
-          })
+          });
         }
       } else if (cla.configFile) {
-        drpConf = DevRingerConfig.fromDRP(cla.configFile);
+        this.drpConf = DevRingerConfig.fromDRP(cla.configFile);
       }
     }
 
-    if (!drpConf) {
+    if (!this.drpConf) {
       throw new Error('No configuration found!');
     }
-    drpConf.then((conf) => {
-      console.log(JSON.stringify(conf, null, 2));
-      let proxies = [];
+    this.drpConf.then((conf) => {
+      this.proxies = [];
       Object.entries(conf.servers).forEach(([key, value]) => {
         let sourceUrl = new URL(key);
         let source = new Locator({
@@ -43,10 +41,12 @@ class DevRingerServer {
           host: sourceUrl.hostname,
           port: sourceUrl.port
         });
-        let isAllPaths = (el) => {return '*' === el.path};
+        let isAllPaths = (el) => {
+          return '*' === el.path;
+        };
         let targetPath = value.proxyPaths.find(isAllPaths);
         let targetUrl = targetPath ? new URL(targetPath.origin) : null;
-        let target = undefined;
+        let target = null;
         if (targetUrl) {
           target = new Locator({
             protocol: targetUrl.protocol.slice(0, -1),
@@ -54,39 +54,44 @@ class DevRingerServer {
             port: targetUrl.port
           });
         }
-        let rules = [];
-        let prxRules = [];
+        let middlewareRules = [];
+        let proxyResRules = [];
         value.contentRewrites.forEach(({search, replace}) => {
           if (search && replace) {
-            rules.push(new Rule({
+            middlewareRules.push(new Rule({
               handler: rewriteBody(
                 new URL(search).origin,
                 new URL(replace).origin
-              ),
+              )
             }));
-            rules.push(new Rule({
+            middlewareRules.push(new Rule({
               handler: rewriteBody(
                 new URL(search).host,
                 new URL(replace).host
-              ),
+              )
+            }));
+            middlewareRules.push(new Rule({
+              handler: rewritePostdata(
+                new URL(replace).origin,
+                new URL(search).origin
+              )
             }));
           }
         });
         value.locationRewrites.forEach(({search, replace}) => {
           if (search && replace) {
-            prxRules.push(new Rule({
+            proxyResRules.push(new Rule({
               handler: rewriteHeader(
                 LOCATION,
                 new URL(search).origin,
                 new URL(replace).origin
-              ),
+              )
             }));
-            prxRules.push(new Rule({
-              handler: rewriteHeader(
-                LOCATION,
-                new URL(search).host,
-                new URL(replace).host
-              ),
+            middlewareRules.push(new Rule({
+              handler: rewritePostdata(
+                new URL(replace).origin,
+                new URL(search).origin
+              )
             }));
           }
         });
@@ -99,27 +104,39 @@ class DevRingerServer {
                 host: originUrl.hostname,
                 port: originUrl.port
               })
-            }, rules.slice(), prxRules.slice());
-            rules.push(new Rule({
+            }, middlewareRules.slice(), proxyResRules.slice());
+            middlewareRules.push(new Rule({
               path: path,
-              handler: function(req, res) {
+              handler: function (req, res) {
                 req.url = req.originalUrl;
                 offshoot.proxy.web(req, res);
                 return false;
-              },
+              }
             }));
           }
         });
-        proxies.push(new ProxyEndpoint({source, target}, rules, prxRules));
+        this.proxies.push(new ProxyEndpoint({source, target}, middlewareRules, proxyResRules));
       });
-      proxies.forEach((proxy) => {
-        proxy.listen();
-      });
-
-      console.log('Server listening at ' + conf.entryPoint + ' Press ^C to quit.');
-    }).catch((err) => {console.log(err)});
+      return conf;
+    }).catch((err) => {
+      console.log(err);
+    });
 
     return this;
+  }
+  start () {
+    this.drpConf.then(() => {
+      this.proxies.forEach((proxy) => {
+        proxy.listen();
+      });
+    });
+  }
+  stop () {
+    this.drpConf.then(() => {
+      this.proxies.forEach((proxy) => {
+        proxy.close();
+      });
+    });
   }
 }
 

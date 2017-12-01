@@ -8,7 +8,9 @@
     "dev-ringer": "./cli.js"
   },
   "scripts": {
-    "gen-cert": "openssl req -x509 -days 365 -nodes -newkey rsa:2048 -keyout localhost-private.pem -out localhost-public.pem -subj '/C=US/ST=Wisconsin/L=Madison/O=UW Madison DoIT/OU=MyUW/CN=localhost'"
+    "gen-cert": "openssl req -x509 -days 365 -nodes -newkey rsa:2048 -keyout localhost-private.pem -out localhost-public.pem -subj '/C=US/ST=Wisconsin/L=Madison/O=UW Madison DoIT/OU=MyUW/CN=localhost'",
+    "lint": "eslint --ext js .",
+    "test": "mocha"
   },
   "author": "davidmsibley",
   "license": "Apache-2.0",
@@ -18,11 +20,22 @@
   },
   "dependencies": {
     "JSONStream": "^1.3.1",
+    "body-parser": "^1.18.2",
     "command-line-args": "^4.0.7",
     "connect": "^3.6.2",
     "connect-body-rewrite": "^0.0.4",
     "http-proxy": "^1.16.2",
     "promise": "^8.0.1",
+    "supertest": "^3.0.0",
     "through2": "^2.0.3"
+  },
+  "devDependencies": {
+    "eslint": "^4.12.0",
+    "eslint-config-standard": "^10.2.1",
+    "eslint-plugin-import": "^2.8.0",
+    "eslint-plugin-node": "^5.2.1",
+    "eslint-plugin-promise": "^3.6.0",
+    "eslint-plugin-standard": "^3.0.1",
+    "mocha": "^4.0.1"
   }
 }
