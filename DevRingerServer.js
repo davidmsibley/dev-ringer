@@ -55,7 +55,6 @@ class DevRingerServer {
           });
         }
         let middlewareRules = [];
-        let proxyReqRules = [];
         let proxyResRules = [];
         value.contentRewrites.forEach(({search, replace}) => {
           if (search && replace) {
@@ -105,7 +104,7 @@ class DevRingerServer {
                 host: originUrl.hostname,
                 port: originUrl.port
               })
-            }, middlewareRules.slice(), proxyReqRules.slice(), proxyResRules.slice());
+            }, middlewareRules.slice(), proxyResRules.slice());
             middlewareRules.push(new Rule({
               path: path,
               handler: function (req, res) {
@@ -116,7 +115,7 @@ class DevRingerServer {
             }));
           }
         });
-        this.proxies.push(new ProxyEndpoint({source, target}, middlewareRules, proxyReqRules, proxyResRules));
+        this.proxies.push(new ProxyEndpoint({source, target}, middlewareRules, proxyResRules));
       });
       return conf;
     }).catch((err) => {
